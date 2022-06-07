@@ -10,7 +10,8 @@ public class ItemObject : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDr
     Vector2Int storedPos;
     ItemStack keptStack;
 
-    RectTransform rectTransform;
+    RectTransform rectTransform, canvasRectTransform;
+    Canvas parentCanvas;
     Vector2 lastPosition, dragPosition;
     bool isDragged;
     int lastRotation;
@@ -23,6 +24,8 @@ public class ItemObject : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDr
     {
         rectTransform = GetComponent<RectTransform>();
         uiParent = ui;
+        parentCanvas = GetComponentInParent<Canvas>();
+        canvasRectTransform = parentCanvas.GetComponent<RectTransform>();
     }
 
     public void SetItem(ItemStack newStack)
@@ -55,7 +58,7 @@ public class ItemObject : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDr
     public void OnBeginDrag(PointerEventData eventData)
     {
         lastPosition = rectTransform.anchoredPosition;
-        dragPosition = transform.position - Input.mousePosition;
+        dragPosition = rectTransform.position - Input.mousePosition;
         transform.SetParent(uiParent.tempDragParent.transform, true);
         uiParent.ClearSpace(keptStack.invPos, keptStack.GetRotatedSize());
         isDragged = true;
@@ -85,7 +88,7 @@ public class ItemObject : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDr
 
     void Update()
     {
-        if(isDragged)
+        if (isDragged)
         {
             if (Input.GetMouseButtonDown(1))
             {
@@ -100,13 +103,14 @@ public class ItemObject : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDr
         Vector2 pos = dragPosition + (Vector2)Input.mousePosition;
         transform.position = pos;
         Debug.Log(TransformToGrid(pos));
-        
+
     }
 
     Vector2Int TransformToGrid(Vector2 input)
     {
-        Vector2Int newVec = new Vector2Int(Mathf.Max(0, Mathf.RoundToInt((input.x - keptStack.GetRotatedSize().x * 32)/64)),
-                        Mathf.Max(Mathf.RoundToInt((Screen.height - input.y - keptStack.GetRotatedSize().y * 32)/64),0));
+        input = CanvasPositioningExtensions.ScreenToCanvasPosition(parentCanvas, input);
+        Vector2Int newVec = new Vector2Int(Mathf.Max(0, Mathf.RoundToInt((canvasRectTransform.sizeDelta.x / 2 + input.x - keptStack.GetRotatedSize().x * 32) / 64)),
+                        Mathf.Max(0, Mathf.RoundToInt((canvasRectTransform.sizeDelta.y / 2 - input.y - keptStack.GetRotatedSize().y * 32) / 64)));
         return newVec;
     }
 }

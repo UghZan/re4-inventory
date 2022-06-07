@@ -143,7 +143,8 @@ public class InventoryManager : MonoBehaviour
 
     public bool CheckIfInvPositionIsFree(Vector2Int pos, int _w, int _h)
     {
-        if (pos.y * gridDim.x + pos.x + _w - 1 + _h - 1 > slotsTotal) return false;
+        if (pos.x > gridDim.x || pos.x + _w - 1 > gridDim.x) return false;
+        if (pos.y * gridDim.x + pos.x + _w - 1 + _h * gridDim.x > slotsTotal) return false;
         for (int j = 0; j < _w; j++)
         {
             for (int k = 0; k < _h; k++)
