@@ -39,7 +39,7 @@ public class ItemObject : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDr
         stackImage.sprite = keptStack.item.itemIcon;
         stackAmount.gameObject.SetActive(keptStack.item.itemStackSize > 1);
         stackAmount.text = keptStack.amount.ToString();
-
+        stackImage.rectTransform.sizeDelta = new Vector2(keptStack.item.itemSize.x * 64, keptStack.item.itemSize.y * 64);
         UpdateVisual();
         Vector2 pos = new Vector2(storedPos.x * 64 + 32 * keptStack.GetRotatedSize().x, -storedPos.y * 64 - 32 * keptStack.GetRotatedSize().y);
         rectTransform.anchoredPosition = pos;
@@ -47,8 +47,9 @@ public class ItemObject : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDr
 
     void UpdateVisual()
     {
-        rectTransform.sizeDelta = new Vector2(keptStack.item.itemSize.x * 64, keptStack.item.itemSize.y * 64);
-        rectTransform.rotation = Quaternion.AngleAxis(keptStack.rotated * 90, Vector3.forward);
+
+        rectTransform.sizeDelta = new Vector2(keptStack.GetRotatedSize().x * 64, keptStack.GetRotatedSize().y * 64);
+        stackImage.rectTransform.rotation = Quaternion.AngleAxis(keptStack.rotated * 90, Vector3.forward);
     }
 
     public void OnBeginDrag(PointerEventData eventData)
