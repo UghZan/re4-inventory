@@ -1,13 +1,17 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
-public class InventoryManager : MonoBehaviour
+
+public class InventoryZone : MonoBehaviour
 {
-    [Header("Grid Settings")]
-    [SerializeField] Vector2Int gridDim; //lines and columns count
+    [HideInInspector] public bool isInit;
+
+    [Header("Zone Settings")]
+    public Vector2Int gridDim; //lines and columns count
+    [SerializeField] int maxItems; //set to -1 to make it fit infinitely
+    public ItemSlot[] fittingTypes; //use ALL to make it universal
+    
     int gridHeight;
 
     bool[] occupiedSlots; //slots for fitting inside of a grid
@@ -16,26 +20,30 @@ public class InventoryManager : MonoBehaviour
     List<ItemStack> items;
 
     [Header("Debug Settings")]
-    //testing
-    public bool debugAdd;
-    public ItemInfo[] testItems;
-    public int howMuch;
-    void Start()
+    [SerializeField] bool shouldPrefill;
+    [SerializeField] int amount;
+    [SerializeField] List<ItemInfo> debugItems;
+
+    public void InitZone()
     {
+        if (isInit) return;
+
         slotsTotal = gridDim.x * gridDim.y;
         occupiedSlots = new bool[slotsTotal];
         items = new List<ItemStack>();
-        if(debugAdd)
+        if(shouldPrefill)
         {
-            TestItems();
+            DebugPrefill();
         }
+        isInit = true;
     }
 
-    void TestItems()
+    void DebugPrefill()
     {
-        for (int i = 0; i < howMuch; i++)
+        for (int i = 0; i < amount; i++)
         {
-            AddItem(this, new ItemStack(testItems[UnityEngine.Random.Range(0, testItems.Length)], 1));
+            int rnd = Random.Range(0, debugItems.Count);
+            AddItem(new ItemStack(debugItems[rnd], Random.Range(1, debugItems[rnd].itemStackSize+1)));
         }
     }
 
@@ -52,35 +60,79 @@ public class InventoryManager : MonoBehaviour
     }
 
     public int GetGridHeight() { return gridHeight; }
+    public int GetMaxItems() { return maxItems; }
+    public bool IsEmpty => items.Count == 0;
+    public bool IsFull => items.Count == maxItems;
 
-    public static bool AddItem(InventoryManager inv, ItemStack item)
+    public ItemStack GetFirstItemStack() //useful for 1-fitting inventory zones (such as slots for weapons/armors)
     {
-        ItemStack temp = inv.FindNonfullStack(item);
+        return GetItemStackAt(0);
+    }
+
+    public ItemStack? GetItemStackAt(int index) //useful for 1-fitting inventory zones (such as slots for weapons/armors)
+    {
+        if(index > items.Count)
+        {
+            Debug.LogError("Item index outside of capacity");
+            return null;
+        }
+        return items[index];
+    }
+
+    public bool AddItem(ItemStack item)
+    {
+        ItemStack temp = FindNonfullStack(item);
         if (temp != null) //if there's a stack of same item
         {
-            int tempAmount = item.amount;
-            if (temp.UpdateStack(ref tempAmount)) //check if we can fit all of new items in older stack
+            int tempAmount = item.GetStackAmount();
+            if (temp.UpdateStackAmount(ref tempAmount)) //check if we can fit all of new items in older stack
             {
-                item.SetAmount(tempAmount);
+                item.SetStackAmount(tempAmount);
                 return true;
             }
             else
             {
-                item.SetAmount(tempAmount); //repeat until we get the stack in inventory or run out of place
-                AddItem(inv, item);
+                item.SetStackAmount(tempAmount); //repeat until we get the stack in inventory or run out of place
+                AddItem(item);
             }
         }
         else
         {
-            Vector2Int? vacantPos = inv.FindVacantSpot(item.item.itemSize.x, item.item.itemSize.y, true);
+            if (items.Count == maxItems && maxItems != -1) return false;
+
+            Vector2Int? vacantPos = FindVacantSpot(item.GetRotatedSize().x, item.GetRotatedSize().y, true);
             if (vacantPos == null)
                 return false;
             else
             {
-                item.invPos = (Vector2Int)vacantPos;
-                inv.items.Add(item);
+                item.SetPositionInZone((Vector2Int)vacantPos);
+                item.parentZone = this;
+                items.Add(item);
                 return true;
             }
+        }
+        return false;
+    }
+
+    public bool AddItemAt(ItemStack itemStack, Vector2Int pos)
+    {
+        if(CheckIfInvPositionIsFree(pos, itemStack.GetRotatedSize().x, itemStack.GetRotatedSize().y))
+        {
+            itemStack.SetPositionInZone(pos);
+            FillOccupiedSpace(pos, itemStack.GetRotatedSize().x, itemStack.GetRotatedSize().y);
+            itemStack.parentZone = this;
+            items.Add(itemStack);
+            return true;
+        }
+        return false;
+    }
+
+    public bool RemoveItem(ItemStack itemStack)
+    {
+        if(items.Contains(itemStack))
+        {
+            items.Remove(itemStack);
+            return true;
         }
         return false;
     }
@@ -143,8 +195,9 @@ public class InventoryManager : MonoBehaviour
 
     public bool CheckIfInvPositionIsFree(Vector2Int pos, int _w, int _h)
     {
-        if (pos.x > gridDim.x || pos.x + _w - 1 > gridDim.x) return false;
-        if (pos.y * gridDim.x + pos.x + _w - 1 + _h * gridDim.x > slotsTotal) return false;
+        if (pos.x >= gridDim.x || pos.x + _w - 1 >= gridDim.x) return false;
+        if (pos.y * gridDim.x + pos.x + _w - 1 + (_h-1) * gridDim.x > slotsTotal) return false;
+        //Debug.Log("not going out of bounds yet");
         for (int j = 0; j < _w; j++)
         {
             for (int k = 0; k < _h; k++)
