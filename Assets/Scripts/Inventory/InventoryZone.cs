@@ -100,7 +100,7 @@ public class InventoryZone : MonoBehaviour
         {
             if (items.Count == maxItems && maxItems != -1) return false;
 
-            Vector2Int? vacantPos = FindVacantSpot(item.GetRotatedSize().x, item.GetRotatedSize().y, true);
+            Vector2Int? vacantPos = FindVacantSpot(item.item.itemMatrix, item.GetRotation(), true);
             if (vacantPos == null)
                 return false;
             else
@@ -116,10 +116,10 @@ public class InventoryZone : MonoBehaviour
 
     public bool AddItemAt(ItemStack itemStack, Vector2Int pos)
     {
-        if(CheckIfInvPositionIsFree(pos, itemStack.GetRotatedSize().x, itemStack.GetRotatedSize().y))
+        if(CheckIfInvPositionIsFree(pos, itemStack.item.itemMatrix, itemStack.GetRotation()))
         {
             itemStack.SetPositionInZone(pos);
-            FillOccupiedSpace(pos, itemStack.GetRotatedSize().x, itemStack.GetRotatedSize().y);
+            FillOccupiedSpace(pos, itemStack.item.itemMatrix, itemStack.GetRotation());
             itemStack.parentZone = this;
             items.Add(itemStack);
             return true;
@@ -143,48 +143,19 @@ public class InventoryZone : MonoBehaviour
     }
 
     //if setPlace is true, will place item in the occupied grid, else will just return a place for an item
-    public Vector2Int? FindVacantSpot(int _w, int _h, bool setPlace = false)
+    public Vector2Int? FindVacantSpot(ItemGridMatrix matrix, int rotation, bool setPlace = false)
     {
         bool check = true;
-        int lastSlot = 0;
+        Vector2Int size = matrix.GetRotatedSize(rotation);
         for (int i = 0; i < slotsTotal; i++)
         {
             if (!occupiedSlots[i]) //found an empty spot
             {
-                for (int j = 0; j < _w && check; j++)
-                {
-                    for (int k = 0; k < _h && check; k++)
-                    {
-                        if (Mathf.FloorToInt((i + j) / gridDim.x) != Mathf.FloorToInt(i / gridDim.x)) check = false;
-                        if (i + j + k * gridDim.x >= slotsTotal)
-                        {
-                            check = false;
-                            return null;
-                        }
-                        if (occupiedSlots[i + j + k * gridDim.x])
-                            check = false;
-                    }
-                }
+                Vector2Int p = new Vector2Int(i % gridDim.x, i / gridDim.x);
+                check = CheckIfInvPositionIsFree(p, matrix, rotation);
                 if (check)
                 {
-                    Vector2Int p = new Vector2Int(i % gridDim.x, i / gridDim.x);
-                    if (setPlace)
-                    {
-                        for (int j = 0; j < _w; j++)
-                        {
-                            for (int k = 0; k < _h; k++)
-                            {
-                                occupiedSlots[i + j + k * gridDim.x] = true;
-                            }
-                        }
-                        if (i + (_w - 1) + (_h - 1) * gridDim.x > lastSlot)
-                            lastSlot = Mathf.CeilToInt((i + (_w - 1) + (_h - 1) * gridDim.x) / gridDim.x);
-
-                        if (lastSlot > gridHeight)
-                        {
-                            gridHeight = lastSlot;
-                        }
-                    }
+                    if (setPlace) FillOccupiedSpace(p, matrix, rotation);
                     return p;
                 }
                 check = true;
@@ -193,39 +164,45 @@ public class InventoryZone : MonoBehaviour
         return null;
     }
 
-    public bool CheckIfInvPositionIsFree(Vector2Int pos, int _w, int _h)
+    public bool CheckIfInvPositionIsFree(Vector2Int pos, ItemGridMatrix matrix, int rotation)
     {
-        if (pos.x >= gridDim.x || pos.x + _w - 1 >= gridDim.x) return false;
-        if (pos.y * gridDim.x + pos.x + _w - 1 + (_h-1) * gridDim.x > slotsTotal) return false;
+        Vector2Int size = matrix.GetRotatedSize(rotation);
+        Debug.Log($"CheckIfInvPositionIsFree at pos {pos}, matrix {matrix.name} and rotation {rotation}. Rotated size is {size}");
+        if (pos.x >= gridDim.x || pos.x + size.x - 1 >= gridDim.x) return false;
+        if (pos.y * gridDim.x + pos.x + size.x - 1 + (size.y-1) * gridDim.x > slotsTotal) return false;
         //Debug.Log("not going out of bounds yet");
-        for (int j = 0; j < _w; j++)
+        for (int j = 0; j < size.x; j++)
         {
-            for (int k = 0; k < _h; k++)
+            for (int k = 0; k < size.y; k++)
             {
-                if (occupiedSlots[pos.x + pos.y * gridDim.x + j + k * gridDim.x]) return false;
+                if (matrix.GetAtRotated(rotation, j, k) && occupiedSlots[pos.x + pos.y * gridDim.x + j + k * gridDim.x]) return false;
             }
         }
         return true;
     }
 
-    public void ClearOccupiedSpace(Vector2Int pos, int _w, int _h)
+    public void ClearOccupiedSpace(Vector2Int pos, ItemGridMatrix matrix, int rotation)
     {
-        for (int j = 0; j < _w; j++)
+        Vector2Int size = matrix.GetRotatedSize(rotation);
+        Debug.Log($"ClearOccupiedSpace at pos {pos}, matrix {matrix.name} and rotation {rotation}. Rotated size is {size}");
+        for (int j = 0; j < size.x; j++)
         {
-            for (int k = 0; k < _h; k++)
+            for (int k = 0; k < size.y; k++)
             {
-                occupiedSlots[pos.x + pos.y * gridDim.x + j + k * gridDim.x] = false;
+                if(matrix.GetAtRotated(rotation, j, k)) occupiedSlots[pos.x + pos.y * gridDim.x + j + k * gridDim.x] = false;
             }
         }
     }
 
-    public void FillOccupiedSpace(Vector2Int pos, int _w, int _h)
+    public void FillOccupiedSpace(Vector2Int pos, ItemGridMatrix matrix, int rotation)
     {
-        for (int j = 0; j < _w; j++)
+        Vector2Int size = matrix.GetRotatedSize(rotation);
+        Debug.Log($"FillOccupiedSpace at pos {pos}, matrix {matrix.name} and rotation {rotation}. Rotated size is {size}");
+        for (int j = 0; j < size.x; j++)
         {
-            for (int k = 0; k < _h; k++)
+            for (int k = 0; k < size.y; k++)
             {
-                occupiedSlots[pos.x + pos.y * gridDim.x + j + k * gridDim.x] = true;
+                if (matrix.GetAtRotated(rotation, j, k)) occupiedSlots[pos.x + pos.y * gridDim.x + j + k * gridDim.x] = true;
             }
         }
     }

@@ -51,7 +51,7 @@ public class ItemObject : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDr
     public void UpdateObject()
     {
         stackImage.sprite = keptStack.item.itemIcon;
-        stackImage.rectTransform.sizeDelta = new Vector2(keptStack.item.itemSize.x * gridSize, keptStack.item.itemSize.y * gridSize);
+        stackImage.rectTransform.sizeDelta = new Vector2(keptStack.GetNonRotatedSize().x * gridSize, keptStack.GetNonRotatedSize().y * gridSize);
 
         stackAmount.gameObject.SetActive(keptStack.item.itemStackSize > 1);
         stackAmount.text = keptStack.GetStackAmount().ToString();
@@ -68,7 +68,7 @@ public class ItemObject : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDr
     void UpdateVisual()
     {
         rectTransform.sizeDelta = new Vector2(keptStack.GetRotatedSize().x * gridSize, keptStack.GetRotatedSize().y * gridSize);
-        stackImage.rectTransform.rotation = Quaternion.AngleAxis(keptStack.GetRotation() * 90, Vector3.forward);
+        stackImage.rectTransform.rotation = Quaternion.AngleAxis(keptStack.GetRotation() * 90, Vector3.back);
     }
 
     public void OnBeginDrag(PointerEventData eventData)
@@ -78,7 +78,7 @@ public class ItemObject : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDr
         lastSlotTransform = rectTransform.parent;
         lastRotation = keptStack.GetRotation();
 
-        uiParent.ClearSpace(keptStack.GetPositionInZone(), keptStack.GetRotatedSize());
+        uiParent.ClearSpace(keptStack.GetPositionInZone(), keptStack.item.itemMatrix, keptStack.GetRotation());
         transform.SetParent(uiParent.uiManager.tempDragParent.transform, true);
 
         dragPosition = rectTransform.position - Input.mousePosition;
@@ -110,7 +110,7 @@ public class ItemObject : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDr
     {
         transform.SetParent(lastSlotTransform, true);
         keptStack.SetPositionInZone(newPos);
-        uiParent.FillSpace(newPos, keptStack.GetRotatedSize());
+        uiParent.FillSpace(newPos, keptStack.item.itemMatrix, keptStack.GetRotation());
     }
 
     public void OnEndDrag(PointerEventData eventData)
@@ -130,7 +130,7 @@ public class ItemObject : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDr
         {
             Vector2Int newPos = TransformToGrid(droppedInto);
             //Debug.Log(newPos + " " + keptStack.GetRotatedSize());
-            bool isFreeSpaceUnderneath = droppedInto.CheckFreeSpace(newPos, keptStack.GetRotatedSize());
+            bool isFreeSpaceUnderneath = droppedInto.CheckFreeSpace(newPos, keptStack.item.itemMatrix, keptStack.GetRotation());
             if (isFreeSpaceUnderneath)
             {
                 if (droppedInto.StackBelongsToZone(keptStack))
@@ -150,6 +150,7 @@ public class ItemObject : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDr
             {
                 if(droppedInto.AddItemInZone(this))
                 {
+                    uiParent.RemoveItemFromZone(this);
                     Debug.Log("Still found a place, let's go");
                     UpdateUIParentZone(droppedInto);
                     transform.SetParent(droppedInto.transform, true);

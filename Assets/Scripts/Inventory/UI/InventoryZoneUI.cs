@@ -92,19 +92,19 @@ public class InventoryZoneUI : MonoBehaviour, IDropHandler
         itemsZone.GetComponent<RectTransform>().sizeDelta = new Vector2(itemsZone.GetComponent<RectTransform>().sizeDelta.x, (maxHeight + 1) * 32);
     }
 
-    public bool CheckFreeSpace(Vector2Int gridPos, Vector2Int size)
+    public bool CheckFreeSpace(Vector2Int gridPos, ItemGridMatrix matrix, int rotation)
     {
-        return representedInvZone.CheckIfInvPositionIsFree(gridPos, size.x, size.y);
+        return representedInvZone.CheckIfInvPositionIsFree(gridPos, matrix, rotation);
     }
 
-    public void ClearSpace(Vector2Int gridPos, Vector2Int size)
+    public void ClearSpace(Vector2Int gridPos, ItemGridMatrix matrix, int rotation)
     {
-        representedInvZone.ClearOccupiedSpace(gridPos, size.x, size.y);
+        representedInvZone.ClearOccupiedSpace(gridPos, matrix, rotation);
     }
 
-    public void FillSpace(Vector2Int gridPos, Vector2Int size)
+    public void FillSpace(Vector2Int gridPos, ItemGridMatrix matrix, int rotation)
     {
-        representedInvZone.FillOccupiedSpace(gridPos, size.x, size.y);
+        representedInvZone.FillOccupiedSpace(gridPos, matrix, rotation);
     }
 
     public bool RemoveItemFromZone(ItemObject visual)

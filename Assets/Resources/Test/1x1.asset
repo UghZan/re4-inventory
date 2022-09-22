@@ -14,10 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemDisplayName: 
   itemDescription: 
-  itemObject: {fileID: 0}
   itemIcon: {fileID: 1061015662, guid: 197a10e9bf83fa843b563dc4665c7651, type: 3}
-  itemSize: {x: 1, y: 1}
+  itemMatrix: {fileID: 11400000, guid: 5ad0b5f53ce93d74ca8b2c98bb642914, type: 2}
   itemWeight: 0
-  ItemSlot: 0
-  itemStackSize: 8
+  itemSlot: 0
+  itemStackSize: 1
   essential: 0

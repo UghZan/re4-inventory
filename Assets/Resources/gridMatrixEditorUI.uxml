@@ -1,0 +1,10 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/subGrid.uss?fileID=7433441132597879392&amp;guid=1decb1f64c9263b42b836e627f9c742e&amp;type=3#subGrid" />
+    <ui:IntegerField label="Size X" value="0" binding-path="sizeX" name="sizeXField" />
+    <ui:IntegerField label="Size Y" value="0" binding-path="sizeY" name="sizeYField" />
+    <ui:Label tabindex="-1" text="Grid Matrix" display-tooltip-when-elided="true" name="gridMatrixLabel" style="align-items: auto; -unity-text-align: upper-center;" />
+    <ui:VisualElement name="gridVisualElement" style="align-items: center;" />
+    <ui:VisualElement name="buttonVisualElement">
+        <ui:Button tabindex="-1" text="Debug Print" display-tooltip-when-elided="true" name="dbgPrintButton" />
+    </ui:VisualElement>
+</ui:UXML>

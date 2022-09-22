@@ -949,7 +949,7 @@ MonoBehaviour:
   maxItems: -1
   fittingTypes: 00000000
   shouldPrefill: 1
-  amount: 50
+  amount: 8
   debugItems:
   - {fileID: 11400000, guid: 06e3c42ff341dc84ebce52cf8b785aac, type: 2}
   - {fileID: 11400000, guid: fadc374885575e048b0da03b03019f21, type: 2}

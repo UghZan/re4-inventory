@@ -16,7 +16,7 @@ public class ItemInfo : ScriptableObject
     public string itemDisplayName;
     public string itemDescription;
     public Sprite itemIcon;
-    public Vector2Int itemSize;
+    public ItemGridMatrix itemMatrix;
 
     [Header("Inventory Parameters")]
     public float itemWeight;

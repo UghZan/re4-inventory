@@ -15,8 +15,8 @@ MonoBehaviour:
   itemDisplayName: 
   itemDescription: 
   itemIcon: {fileID: -1442941815, guid: 197a10e9bf83fa843b563dc4665c7651, type: 3}
-  itemSize: {x: 1, y: 2}
+  itemMatrix: {fileID: 11400000, guid: 27d8d1be52825b74390f9f99e9ab6c99, type: 2}
   itemWeight: 0
   itemSlot: 0
-  itemStackSize: 4
+  itemStackSize: 1
   essential: 0

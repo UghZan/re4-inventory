@@ -33,8 +33,17 @@ public class ItemStack
 
     public Vector2Int GetRotatedSize()
     {
-        if (rotated == 0 || rotated == 2) return item.itemSize;
-        else return new Vector2Int(item.itemSize.y, item.itemSize.x);
+        return item.itemMatrix.GetRotatedSize(rotated);
+    }
+
+    public ItemGridMatrix GetMatrix()
+    {
+        return item.itemMatrix;
+    }
+
+    public Vector2Int GetNonRotatedSize()
+    {
+        return item.itemMatrix.GetRotatedSize(0);
     }
 
     public int GetStackAmount()
